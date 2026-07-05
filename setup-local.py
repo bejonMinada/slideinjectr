@@ -111,7 +111,8 @@ def start_server():
     print("Starting SlideInjectr...")
     print("="*50)
     
-    port = find_available_port()
+    # For development, prefer port 8000 (matches .env.local configuration)
+    port = 8000 if is_port_free(8000) else find_available_port()
     if not port:
         print("❌ No available ports found (5000-5100)")
         return False
