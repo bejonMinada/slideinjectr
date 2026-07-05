@@ -50,28 +50,48 @@ slideinjectr.exe
 
 ## Troubleshooting Build Errors
 
-### Problem: No dist folder created / Build exits silently
+### 🔴 CRITICAL BUG FIXED - Nov Build Scripts
+
+**Problem Identified:** The build scripts were not using the Python virtual environment's pip and pyinstaller!
+- ❌ Old: After `activate.bat`, the system pip/pyinstaller were still being used
+- ✅ New: Explicitly use `venv-build\Scripts\pip.exe` and `pyinstaller.exe`
+
+**What This Means:**
+The old scripts appeared to install packages but they went to system Python, not the venv. PyInstaller then couldn't find them, so the build would silently fail - no errors, no dist folder!
+
+**Solution:** Update to the latest build scripts from GitHub:
+```powershell
+git pull origin master
+```
+
+Then try building again:
+```powershell
+# Option 1: Batch (Windows)
+.\build-standalone.bat
+
+# Option 2: PowerShell (More reliable)
+.\build-standalone.ps1
+```
+
+### Problem: Still no dist folder created / Build exits silently
 
 **Solution Step 1: Use Debug Version**
 
-First, try the **debug version** of the build script - it shows every single step:
+Use the debug script to see every step:
 
 ```powershell
-# Option A: Batch (Windows only)
+# Option A: Batch debug version
 .\build-standalone-debug.bat
 
-# Option B: PowerShell (more reliable on Windows 10+)
+# Option B: PowerShell debug version (recommended)
 .\build-standalone-debug.ps1
 ```
 
-These will show exactly where the build fails with `[DEBUG]` messages showing:
-- ✓ Python version
-- ✓ npm version
-- ✓ Each build step
-- ✓ Exit codes for each command
-- ✓ File existence checks
-
-**Copy the output and share what `[DEBUG]` or `[ERROR]` messages you see**
+These will show `[DEBUG]` messages including:
+- ✓ Which venv pip is being used
+- ✓ Output from each pip install command
+- ✓ Whether PyInstaller executable was found
+- ✓ Exact error codes and messages
 
 ---
 
