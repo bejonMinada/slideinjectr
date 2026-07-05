@@ -92,16 +92,44 @@ def build_frontend():
 def is_port_free(port):
     """Check if port is available"""
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    result = sock.connect_ex(('127.0.0.1', port))
-    sock.close()
-    return result != 0
+    try:
+        result = sock.connect_ex(('127.0.0.1', port))
+        sock.close()
+        return result != 0
+    except:
+        return False
 
 
-def find_available_port(start=5000, end=5100):
-    """Find an available port"""
+def find_available_port(preferred_port=None, start=5000, end=5100):
+    """Find an available port with intelligent selection"""
+    
+    # 1. Check environment variable override
+    env_port = os.environ.get('SLIDEINJECTR_PORT')
+    if env_port:
+        try:
+            port = int(env_port)
+            if is_port_free(port):
+                return port
+            else:
+                print(f"⚠️  Port {port} (from SLIDEINJECTR_PORT) is in use, auto-detecting...")
+        except ValueError:
+            print(f"⚠️  Invalid SLIDEINJECTR_PORT: {env_port}")
+    
+    # 2. Try preferred port
+    if preferred_port and is_port_free(preferred_port):
+        return preferred_port
+    
+    # 3. Try common development ports
+    preferred_ports = [5000, 5001, 5002, 8000, 3000, 8080]
+    for port in preferred_ports:
+        if start <= port <= end and is_port_free(port):
+            return port
+    
+    # 4. Sequential search
     for port in range(start, end + 1):
         if is_port_free(port):
             return port
+    
     return None
 
 
@@ -112,13 +140,15 @@ def start_server():
     print("="*50)
     
     # For development, prefer port 8000 (matches .env.local configuration)
-    port = 8000 if is_port_free(8000) else find_available_port()
+    # But intelligently detect available port
+    port = find_available_port(preferred_port=8000)
     if not port:
         print("❌ No available ports found (5000-5100)")
         return False
     
-    print(f"\n✓ Server starting on http://localhost:{port}")
-    print("  Press Ctrl+C to stop\n")
+    print(f"\n✓ Auto-detected port: {port}")
+    print(f"  Access at: http://localhost:{port}")
+    print(f"  Press Ctrl+C to stop\n")
     
     # Change to backend directory so app module can be found
     backend_dir = Path(__file__).parent / "backend"
