@@ -141,49 +141,44 @@ function FilePickerCard({
 function FolderPickerCard({
   title,
   subtitle,
-  selectedLabel,
+  value,
   hasSelection,
   disabled = false,
-  onBrowse,
+  onValueChange,
   onRemove,
 }: {
   title: string;
   subtitle: string;
-  selectedLabel: string;
+  value: string;
   hasSelection: boolean;
   disabled?: boolean;
-  onBrowse: () => void;
+  onValueChange: (value: string) => void;
   onRemove?: () => void;
 }) {
   const darkMode = localStorage.getItem("darkMode") ? JSON.parse(localStorage.getItem("darkMode")!) : false;
 
   return (
-    <div
-      className={`mt-2 rounded-2xl border-2 border-dashed p-4 transition-colors ${
-        hasSelection
-          ? darkMode ? "border-emerald-900 bg-emerald-950/50" : "border-emerald-300 bg-emerald-50/80"
-          : darkMode ? "border-slate-600 bg-slate-800/50 hover:border-slate-500 hover:bg-slate-700/50" : "border-slate-300 bg-slate-50 hover:border-brand-mint hover:bg-white"
-      } ${disabled ? "pointer-events-none opacity-55" : ""}`}
-    >
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={onBrowse}
-        className={`block w-full text-left ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
-      >
-        <div className="flex items-start gap-3">
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg font-semibold ${
-            darkMode ? "bg-slate-700 text-amber-400" : "bg-brand-sun text-brand-ink"
-          }`}>
-            🔍
-          </div>
-          <div>
-            <p className={`font-semibold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{title}</p>
-            <p className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-600"}`}>{subtitle}</p>
-            <p className={`mt-1 text-xs ${darkMode ? "text-slate-500" : "text-slate-500"}`}>{selectedLabel}</p>
-          </div>
+    <div className={`mt-2 rounded-2xl border-2 p-4 transition-colors ${
+      darkMode ? "border-slate-600 bg-slate-800/50" : "border-slate-300 bg-slate-50"
+    } ${disabled ? "pointer-events-none opacity-55" : ""}`}>
+      <label className="block">
+        <div className="mb-3">
+          <p className={`font-semibold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{title}</p>
+          <p className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-600"}`}>{subtitle}</p>
         </div>
-      </button>
+        <input
+          type="text"
+          disabled={disabled}
+          value={value}
+          onChange={(e) => onValueChange(e.target.value)}
+          placeholder="Enter folder path (e.g., /path/to/project or C:\Users\Name\project)"
+          className={`w-full rounded-lg border px-3 py-2 text-sm transition-colors ${
+            darkMode
+              ? "border-slate-600 bg-slate-700 text-slate-100 placeholder-slate-500 focus:border-brand-mint focus:outline-none"
+              : "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-brand-mint focus:outline-none"
+          }`}
+        />
+      </label>
       {hasSelection && onRemove ? (
         <button
           type="button"
@@ -191,7 +186,7 @@ function FolderPickerCard({
           className={`mt-3 rounded-lg border px-3 py-1 text-xs font-semibold transition-colors ${darkMode ? "border-rose-900 bg-rose-950/50 text-rose-400 hover:bg-rose-900/50" : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"}`}
           onClick={onRemove}
         >
-          Deselect Folder
+          Clear Folder Path
         </button>
       ) : null}
     </div>
@@ -340,7 +335,6 @@ export function App() {
   };
 
   const [projectDirectory, setProjectDirectory] = useState("");
-  const folderPickerRef = useRef<HTMLInputElement | null>(null);
   const [templateFile, setTemplateFile] = useState<File | null>(null);
   const [dataFiles, setDataFiles] = useState<File[]>([]);
   const [settingsFile, setSettingsFile] = useState<File | null>(null);
@@ -398,47 +392,6 @@ export function App() {
 
   const outputSubdir = selectedOutputSubdir();
   const directoryReady = !!outputSubdir;
-
-  function onBrowseProjectDirectory(files: FileList | null) {
-    const first = files?.[0];
-    if (!first) {
-      return;
-    }
-
-    const relativePath = (first as File & { webkitRelativePath?: string }).webkitRelativePath || "";
-    const firstFolder = relativePath.split("/")[0]?.trim();
-    if (firstFolder) {
-      setProjectDirectory(firstFolder);
-      return;
-    }
-
-    const fallback = first.name.replace(/\.[^.]+$/, "").trim();
-    if (fallback) {
-      setProjectDirectory(fallback);
-    }
-  }
-
-  async function onPickProjectDirectory() {
-    const pickerWindow = window as DirectoryPickerWindow;
-    if (typeof pickerWindow.showDirectoryPicker === "function") {
-      try {
-        const directoryHandle = await pickerWindow.showDirectoryPicker();
-        const folderName = directoryHandle.name?.trim();
-        if (folderName) {
-          setProjectDirectory(folderName);
-        }
-      } catch (error) {
-        const maybeDomError = error as DOMException;
-        if (maybeDomError.name !== "AbortError") {
-          setMessage(`Folder selection failed: ${(error as Error).message}`);
-        }
-      }
-      return;
-    }
-
-    // Fallback for browsers without showDirectoryPicker.
-    folderPickerRef.current?.click();
-  }
 
   function resetSession() {
     setProjectDirectory("");
@@ -810,25 +763,13 @@ export function App() {
             </button>
           </div>
           <FolderPickerCard
-            title="Browse & Select Project Folder"
-            subtitle="Click to browse and select a folder"
-            selectedLabel={projectDirectory ? `Selected: ${projectDirectory}` : "No folder selected"}
+            title="Enter Project Folder Path"
+            subtitle="Paste the full path to your project folder"
+            value={projectDirectory}
             hasSelection={directoryReady}
             disabled={busy}
-            onBrowse={() => {
-              void onPickProjectDirectory();
-            }}
+            onValueChange={setProjectDirectory}
             onRemove={() => setProjectDirectory("")}
-          />
-          <input
-            ref={folderPickerRef}
-            type="file"
-            hidden
-            className="hidden"
-            tabIndex={-1}
-            aria-hidden="true"
-            onChange={(event) => onBrowseProjectDirectory(event.target.files)}
-            {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
           />
         </header>
 

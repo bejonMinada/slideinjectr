@@ -49,6 +49,67 @@ slideinjectr/
 
 ## System Requirements & Installation
 
+### Choose Your Deployment Method
+
+SlideInjectr supports two deployment options:
+
+#### Option 1: Docker (Recommended for Teams/Hosting)
+- Run on any machine with Docker installed
+- Access from multiple devices on the network
+- Consistent environment across platforms
+- See: [Docker Setup Instructions](#docker-setup-windows)
+
+#### Option 2: Standalone Desktop App (Recommended for Individual Use)
+- No Docker required
+- Single `.exe` file on Windows
+- Works offline
+- See: [Standalone Setup Instructions](#standalone-setup-windows)
+
+---
+
+## Standalone Setup (Windows)
+
+### Requirements
+
+- **Windows 10+**
+- **Python 3.10+** (or use pre-built `.exe`)
+- **LibreOffice Impress** (free)
+
+### Option A: Pre-built Executable (Easiest)
+
+1. Download `slideinjectr.exe` from releases
+2. Install LibreOffice: https://www.libreoffice.org/download/
+3. Double-click `slideinjectr.exe`
+4. Application opens automatically at `http://localhost:5000`
+
+### Option B: Run from Source
+
+1. **Install LibreOffice Impress:**
+   - Download from: https://www.libreoffice.org/download/
+   - Run installer, restart computer
+
+2. **Run setup script:**
+   ```powershell
+   cd slideinjectr
+   .\start-local.bat
+   ```
+
+3. **Application opens automatically at** `http://localhost:5000`
+
+### Option C: Build Your Own Executable
+
+```powershell
+cd slideinjectr
+.\build-standalone.ps1
+# Creates: dist/slideinjectr/slideinjectr.exe
+```
+
+See [STANDALONE_GUIDE.md](STANDALONE_GUIDE.md) for detailed instructions.
+
+---
+
+## Docker Setup (Windows) {#docker-setup-windows}
+
 ### Windows Prerequisites
 
 Before running SlideInjectr on a fresh Windows device, install:
@@ -109,7 +170,7 @@ Install on a fresh macOS device:
 
 ---
 
-## Run Locally with Docker (Default: Port 3030)
+## Run with Docker (Default: Port 5000)
 
 ### Quick Start
 
@@ -130,7 +191,7 @@ Install on a fresh macOS device:
 
 3. Open in browser:
    ```
-   http://localhost:3030
+   http://localhost:5000
    ```
 
 4. Stop containers:
