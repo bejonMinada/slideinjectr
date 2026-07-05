@@ -22,3 +22,6 @@ Thumbs.db
 tmp/
 uploads/
 *.log
+
+# TypeScript build cache
+*.tsbuildinfo
