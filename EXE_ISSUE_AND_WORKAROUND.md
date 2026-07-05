@@ -50,35 +50,28 @@ slideinjectr.exe
 
 ## Troubleshooting Build Errors
 
-### Problem: Build script exits quickly without .exe
-**Solution:** Read the error messages carefully. The improved script now shows:
+### Problem: No dist folder created / Build exits silently
 
-```
-[ERROR] npm is not installed or not in PATH
-[ERROR] Failed to install frontend dependencies
-[ERROR] Failed to create virtual environment
+**Solution Step 1: Use Debug Version**
+
+First, try the **debug version** of the build script - it shows every single step:
+
+```powershell
+# Option A: Batch (Windows only)
+.\build-standalone-debug.bat
+
+# Option B: PowerShell (more reliable on Windows 10+)
+.\build-standalone-debug.ps1
 ```
 
-### Missing Python
-```
-[ERROR] Python is not installed or not in PATH
-Please install Python 3.10+ from https://www.python.org/
-```
-**Fix:** Install Python 3.10+ and ensure it's in system PATH
+These will show exactly where the build fails with `[DEBUG]` messages showing:
+- ✓ Python version
+- ✓ npm version
+- ✓ Each build step
+- ✓ Exit codes for each command
+- ✓ File existence checks
 
-### Missing Node.js/npm
-```
-[ERROR] npm is not installed or not in PATH
-Please install Node.js from https://nodejs.org/
-```
-**Fix:** Install Node.js (includes npm)
-
-### npm install or build fails
-```
-[ERROR] Failed to install frontend dependencies
-[ERROR] Failed to build frontend
-```
-**Fix:** Try alternative method below
+**Copy the output and share what `[DEBUG]` or `[ERROR]` messages you see**
 
 ---
 
