@@ -136,6 +136,11 @@ def start_server():
     
     # Start server
     try:
+        # Ensure backend directory is in Python path for imports
+        backend_dir = Path(__file__).parent / "backend"
+        os.chdir(backend_dir)
+        sys.path.insert(0, str(backend_dir))
+        
         from app.main import app
         import uvicorn
         
