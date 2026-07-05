@@ -80,9 +80,11 @@ SlideInjectr supports two deployment options:
 1. Download `slideinjectr.exe` from releases
 2. Install LibreOffice: https://www.libreoffice.org/download/
 3. Double-click `slideinjectr.exe`
-4. Application opens automatically at `http://localhost:5000`
+4. **Application auto-detects available port and opens automatically**
+   - Usually opens at: `http://localhost:5000`
+   - Or next available: `http://localhost:5001`, etc.
 
-### Option B: Run from Source
+### Option B: Run from Source (Python)
 
 1. **Install LibreOffice Impress:**
    - Download from: https://www.libreoffice.org/download/
@@ -94,7 +96,32 @@ SlideInjectr supports two deployment options:
    .\start-local.bat
    ```
 
-3. **Application opens automatically at** `http://localhost:5000`
+3. **Application opens automatically** (auto-detected port shown in console)
+   - Check console output for the URL
+   - Example: "✓ Auto-detected port: 5000"
+
+### Option C: Custom Port (Python Setup)
+
+Force a specific port using environment variable:
+
+```powershell
+# Windows PowerShell
+$env:SLIDEINJECTR_PORT=5555
+python setup-local.py
+
+# Or one-liner
+$env:SLIDEINJECTR_PORT=5555; python setup-local.py
+```
+
+Application will use port 5555 if available, otherwise auto-detect next available.
+
+### Option D: Build Your Own Executable
+
+```powershell
+cd slideinjectr
+.\build-standalone.bat
+# Creates: dist\slideinjectr\slideinjectr.exe
+```
 
 ### Option C: Build Your Own Executable
 
@@ -218,45 +245,43 @@ docker compose logs -f backend
 
 ---
 
-## Custom Port Configuration
+## Custom Port Configuration (Docker)
 
-To run SlideInjectr on different ports, edit `docker-compose.yml`:
+### Option 1: Change Frontend Port Only
 
-### Example: Frontend on Port 8080, Backend on Port 9000
+Edit `docker-compose.yml`:
 
-**Before (default):**
 ```yaml
 services:
   frontend:
     ports:
-      - "3030:80"        # Host:Container port mapping
-    
-  backend:
-    ports:
-      - "8000:8000"
+      - "8080:80"        # Change 5000 to 8080
 ```
 
-**After (custom ports):**
-```yaml
-services:
-  frontend:
-    ports:
-      - "8080:80"        # Change 3030 to 8080
-    
-  backend:
-    ports:
-      - "9000:8000"      # Change 8000 to 9000
-```
-
-**Rebuild and restart:**
+Rebuild:
 ```bash
 docker compose up --build -d
 ```
 
-**Access at:**
+Access at: `http://localhost:8080`
+
+### Option 2: Use Environment Variable (Recommended)
+
+Set port before running:
+
+**Windows PowerShell:**
+```powershell
+$env:SLIDEINJECTR_PORT=8080
+docker compose up
 ```
-http://localhost:8080
+
+**Linux/macOS:**
+```bash
+export SLIDEINJECTR_PORT=8080
+docker-compose up
 ```
+
+Access at: `http://localhost:8080`
 
 ### Environment Variables & Configuration
 
@@ -323,11 +348,18 @@ docker-compose down -v
 
 ## API Documentation
 
-After starting, access interactive API documentation:
+After starting, access interactive API documentation at your running port:
 
+**Docker (Port 5000):**
 ```
-http://localhost:3030/api/docs     # Swagger UI
-http://localhost:3030/api/redoc    # ReDoc
+http://localhost:5000/api/docs     # Swagger UI
+http://localhost:5000/api/redoc    # ReDoc
+```
+
+**Standalone (Auto-detected - check console):**
+```
+http://localhost:5003/api/docs     # Example (port varies)
+http://localhost:5003/api/redoc
 ```
 
 Main API endpoints:
@@ -373,12 +405,26 @@ All generated files are available to download from the web UI or directly access
 
 ### Port Already in Use
 
-If you get "Address already in use" error:
+**For Standalone/Development Setup:**
+The application automatically detects and uses the next available port (5000-5100). No action needed!
+
+If you want a specific port and it's in use:
+
+```powershell
+# Set custom port and run
+$env:SLIDEINJECTR_PORT=5555
+python setup-local.py
+```
+
+**For Docker:**
+Edit `docker-compose.yml` or use environment variable (see Custom Port Configuration above).
+
+**To find what's using a port:**
 
 **Windows PowerShell:**
 ```powershell
-# Find process using port 3030
-netstat -ano | findstr :3030
+# Find process using port 5000
+netstat -ano | findstr :5000
 
 # Kill process (replace PID with actual process ID)
 taskkill /PID <PID> /F
@@ -386,14 +432,12 @@ taskkill /PID <PID> /F
 
 **Linux/macOS Terminal:**
 ```bash
-# Find process using port 3030
-lsof -i :3030
+# Find process using port 5000
+lsof -i :5000
 
 # Kill process (replace PID with actual process ID)
 kill -9 <PID>
 ```
-
-Or change to a different port in `docker-compose.yml`.
 
 ### Docker Daemon Not Running
 
@@ -467,41 +511,111 @@ Ensure PDF.js worker is bundled correctly. Check browser console for errors.
 
 ---
 
-## API Documentation (Development)
-
-After starting, access documentation:
-
-```
-http://localhost:3030/api/docs     # Swagger UI
-http://localhost:3030/api/redoc    # ReDoc
-```
-
-Available endpoints:
-- `POST /api/v1/templates/analyze` - Analyze PowerPoint structure
-- `POST /api/v1/data-sources/analyze` - Analyze CSV/Excel files
-- `POST /api/v1/presentations/generate` - Generate presentation
-- `POST /api/v1/presentations/preview` - Generate PDF preview
-- `POST /api/v1/settings/export` - Export mapping as YAML
-- `POST /api/v1/settings/import` - Import mapping from YAML
-
-The full application is exposed on host port `3030`.
-
 ## Development (Without Docker)
 
-Backend:
+### Recommended: Automated Setup
 
-1. `cd backend`
-2. `python -m venv .venv`
-3. `.venv\\Scripts\\activate`
-4. `pip install -r requirements.txt`
-5. `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+**Windows:**
+```powershell
+.\start-local.bat
+```
 
-Frontend:
+**Manually (any OS):**
+```bash
+python setup-local.py
+```
 
-1. `cd frontend`
-2. `npm install`
-3. `npm run dev`
-4. Open `http://localhost:5173`
+This will:
+1. Verify Python 3.10+ installed
+2. Check for LibreOffice Impress
+3. Install Python dependencies
+4. Build React frontend
+5. Start FastAPI server on auto-detected port
+6. Open browser automatically
+
+### Manual Backend Setup
+
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate      # Windows
+source .venv/bin/activate   # Linux/macOS
+
+pip install -r requirements.txt
+
+# Start with auto port detection
+python setup-local.py
+
+# Or specify port
+set SLIDEINJECTR_PORT=8000
+python setup-local.py
+```
+
+### Manual Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`
+
+---
+
+## Intelligent Port Detection
+
+Both **standalone** and **development** modes use intelligent port detection:
+
+### How It Works
+
+1. **Environment Variable Override** (highest priority)
+   ```powershell
+   $env:SLIDEINJECTR_PORT=5555
+   python setup-local.py      # Uses port 5555 if available
+   ```
+
+2. **Preferred Port Selection**
+   - Tries common dev ports in order: **5000** → 5001 → 5002 → 8000 → 3000 → 8080
+   - If all preferred ports busy, searches sequential range (5000-5100)
+   - Returns first available port
+
+3. **Automatic Fallback**
+   - If no port available in range, uses port 5000 (may fail if actually in use)
+   - Application will show error and exit gracefully
+
+### Example Scenarios
+
+**Scenario 1: First run (clean system)**
+```
+✓ Auto-detected port: 5000
+  Access at: http://localhost:5000
+```
+
+**Scenario 2: Port 5000 in use**
+```
+✓ Auto-detected port: 5001
+  Access at: http://localhost:5001
+```
+
+**Scenario 3: Force specific port**
+```powershell
+$env:SLIDEINJECTR_PORT=9999
+python setup-local.py
+
+✓ Auto-detected port: 9999
+  Access at: http://localhost:9999
+```
+
+### Benefits
+
+✅ No manual port configuration needed  
+✅ Works alongside Docker on same machine  
+✅ Handles port conflicts automatically  
+✅ Clean user experience (browser opens automatically)  
+✅ Supports both `.exe` and Python setups  
+
+---
 
 ## Strategy for Embedded Chart Data (Excel-Linked Objects)
 
