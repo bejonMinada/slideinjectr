@@ -94,7 +94,8 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "`n✓ Build complete!" -ForegroundColor Green
-Write-Host "`nExecutable location: $scriptDir\dist\slideinjectr\slideinjectr.exe" -ForegroundColor Cyan
+$exePath = Join-Path $scriptDir "dist\slideinjectr\slideinjectr.exe"
+Write-Host "`nExecutable location: $exePath" -ForegroundColor Cyan
 Write-Host "`nNext steps:" -ForegroundColor Yellow
 Write-Host "1. Ensure LibreOffice Impress is installed on target systems"
 Write-Host "2. Run slideinjectr.exe from the dist folder" -ForegroundColor Cyan
