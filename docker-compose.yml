@@ -1,0 +1,30 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3030"]}
+      TEMP_DIR: ${TEMP_DIR:-tmp/uploads}
+      OUTPUT_DIR: ${OUTPUT_DIR:-tmp/output}
+      RETURN_FILE_DIRECTLY: ${RETURN_FILE_DIRECTLY:-true}
+    volumes:
+      - app_tmp:/app/tmp/uploads
+      - ./generated:/app/tmp/output
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "3030:80"
+    restart: unless-stopped
+
+volumes:
+  app_tmp:
