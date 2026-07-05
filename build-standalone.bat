@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 REM Build standalone executable for SlideInjectr
 REM This script bundles the Python backend + frontend into a single .exe
 
@@ -8,118 +9,161 @@ echo   SlideInjectr Standalone Build Script
 echo ===============================================
 echo.
 
+REM Get script directory
+set "SCRIPT_DIR=%~dp0"
+echo Script directory: !SCRIPT_DIR!
+echo.
+
 REM Check Python
+echo Checking Python...
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo Error: Python is not installed or not in PATH
+    echo.
+    echo [ERROR] Python is not installed or not in PATH
     echo Please install Python 3.10+ from https://www.python.org/
+    echo.
     pause
     exit /b 1
 )
 
-echo Python found:
+echo [OK] Python found:
 python --version
+echo.
 
 REM Check npm
+echo Checking npm...
 npm --version >nul 2>&1
 if errorlevel 1 (
-    echo Error: npm is not installed or not in PATH
+    echo.
+    echo [ERROR] npm is not installed or not in PATH
     echo Please install Node.js from https://nodejs.org/
+    echo.
     pause
     exit /b 1
 )
 
-echo npm found:
+echo [OK] npm found:
 npm --version
+echo.
 
 REM Build frontend
-echo.
 echo Building frontend...
-cd /d "%~dp0frontend"
+cd /d "!SCRIPT_DIR!frontend"
+echo Frontend directory: !CD!
+echo.
+
+echo Running: npm install
 call npm install
 if errorlevel 1 (
-    echo Error: Failed to install frontend dependencies
-    cd ..
+    echo.
+    echo [ERROR] Failed to install frontend dependencies
+    cd /d "!SCRIPT_DIR!"
     pause
     exit /b 1
 )
+echo [OK] npm install completed
+echo.
 
+echo Running: npm run build
 call npm run build
 if errorlevel 1 (
-    echo Error: Failed to build frontend
-    cd ..
+    echo.
+    echo [ERROR] Failed to build frontend
+    cd /d "!SCRIPT_DIR!"
     pause
     exit /b 1
 )
+echo [OK] Frontend build completed
+echo.
 
-echo Frontend built successfully
-cd ..
+cd /d "!SCRIPT_DIR!"
 
 REM Setup Python environment
-echo.
 echo Setting up Python environment...
+
 if exist venv-build (
     echo Removing old virtual environment...
-    rmdir /s /q venv-build
+    rmdir /s /q venv-build >nul 2>&1
+    echo [OK] Old venv removed
 )
+echo.
 
+echo Running: python -m venv venv-build
 python -m venv venv-build
 if errorlevel 1 (
-    echo Error: Failed to create virtual environment
+    echo.
+    echo [ERROR] Failed to create virtual environment
     pause
     exit /b 1
 )
+echo [OK] Virtual environment created
+echo.
 
 REM Activate virtual environment
-call venv-build\Scripts\activate.bat
+echo Activating virtual environment...
+call "!SCRIPT_DIR!venv-build\Scripts\activate.bat"
 if errorlevel 1 (
-    echo Error: Failed to activate virtual environment
+    echo.
+    echo [ERROR] Failed to activate virtual environment
     pause
     exit /b 1
 )
+echo [OK] Virtual environment activated
+echo.
 
 REM Install dependencies
 echo Installing Python packages...
-pip install --upgrade pip setuptools wheel
+echo Running: pip install --upgrade pip setuptools wheel
+pip install --upgrade pip setuptools wheel >nul 2>&1
 if errorlevel 1 (
-    echo Error: Failed to upgrade pip
+    echo [ERROR] Failed to upgrade pip
     pause
     exit /b 1
 )
+echo [OK] pip upgraded
+echo.
 
-pip install -r backend\requirements.txt
+echo Running: pip install -r backend\requirements.txt
+pip install -r "!SCRIPT_DIR!backend\requirements.txt"
 if errorlevel 1 (
-    echo Error: Failed to install backend requirements
+    echo.
+    echo [ERROR] Failed to install backend requirements
     pause
     exit /b 1
 )
+echo [OK] Backend requirements installed
+echo.
 
-pip install pyinstaller
+echo Running: pip install pyinstaller
+pip install pyinstaller >nul 2>&1
 if errorlevel 1 (
-    echo Error: Failed to install PyInstaller
+    echo.
+    echo [ERROR] Failed to install PyInstaller
     pause
     exit /b 1
 )
-
-echo Python environment ready
+echo [OK] PyInstaller installed
+echo.
 
 REM Build executable
-echo.
 echo Building executable with PyInstaller...
-pyinstaller slideinjectr.spec
+echo Running: pyinstaller slideinjectr.spec
+cd /d "!SCRIPT_DIR!"
+pyinstaller "!SCRIPT_DIR!slideinjectr.spec"
 
 if errorlevel 1 (
-    echo Error: PyInstaller build failed
+    echo.
+    echo [ERROR] PyInstaller build failed
     pause
     exit /b 1
 )
 
 echo.
 echo ===============================================
-echo Build complete!
+echo [SUCCESS] Build complete!
 echo ===============================================
 echo.
-echo Executable location: dist\slideinjectr\slideinjectr.exe
+echo Executable location: !SCRIPT_DIR!dist\slideinjectr.exe
 echo.
 echo Next steps:
 echo 1. Ensure LibreOffice Impress is installed on target systems
