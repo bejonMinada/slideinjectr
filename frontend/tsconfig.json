@@ -12,13 +12,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
-    "sourceMap": false,
-    "declaration": false,
-    "declarationMap": false,
-    "outDir": "./dist"
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }
+
 
 
