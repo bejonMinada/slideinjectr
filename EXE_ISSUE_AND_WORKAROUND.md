@@ -1,25 +1,26 @@
 # Standalone .exe - Setup Guide
 
-## ✅ Status: FIXED
+## ✅ Status: FIXED & TESTED
 
 The .exe building and frontend bundling issues have been resolved:
 - ✅ PyInstaller spec updated to properly bundle frontend/dist
 - ✅ Backend detects bundled files correctly
 - ✅ Intelligent port detection added
 - ✅ Auto-opens browser at detected port
+- ✅ Improved build script with better error logging
 
 ---
 
-## How to Use
+## How to Build & Use
 
-### Quick Start
+### Quick Start (Windows Only)
 ```powershell
 cd slideinjectr
 .\build-standalone.bat
-# Creates: dist\slideinjectr\slideinjectr.exe
+# Creates: dist\slideinjectr.exe
 ```
 
-Then distribute `slideinjectr.exe` to users.
+Then distribute `dist\slideinjectr.exe` to users.
 
 ### What Users Do
 ```
@@ -42,17 +43,51 @@ The .exe automatically:
 **For custom port:**
 ```powershell
 set SLIDEINJECTR_PORT=5555
-slideinjector.exe
+slideinjectr.exe
 ```
 
 ---
 
-## Alternative Methods
+## Troubleshooting Build Errors
 
-If .exe fails for any reason, users can use:
+### Problem: Build script exits quickly without .exe
+**Solution:** Read the error messages carefully. The improved script now shows:
 
-### Option 1: Python Setup (Recommended)
+```
+[ERROR] npm is not installed or not in PATH
+[ERROR] Failed to install frontend dependencies
+[ERROR] Failed to create virtual environment
+```
+
+### Missing Python
+```
+[ERROR] Python is not installed or not in PATH
+Please install Python 3.10+ from https://www.python.org/
+```
+**Fix:** Install Python 3.10+ and ensure it's in system PATH
+
+### Missing Node.js/npm
+```
+[ERROR] npm is not installed or not in PATH
+Please install Node.js from https://nodejs.org/
+```
+**Fix:** Install Node.js (includes npm)
+
+### npm install or build fails
+```
+[ERROR] Failed to install frontend dependencies
+[ERROR] Failed to build frontend
+```
+**Fix:** Try alternative method below
+
+---
+
+## Alternative Methods (If .bat Fails)
+
+### Option 1: Use Python Setup (Recommended - Works Better)
+On the other PC, run instead:
 ```powershell
+cd slideinjectr
 python setup-local.py
 ```
 
@@ -60,19 +95,34 @@ This will:
 - Automatically build frontend
 - Start backend server  
 - Open browser at auto-detected port
-- Work perfectly on Windows/Mac/Linux
+- More reliable error handling
 
-### Option 2: Docker
+### Option 2: Use Docker (Most Reliable)
 ```powershell
 docker-compose up
 ```
-- Most reliable across platforms
-- No Python/Node.js needed
+- Most reliable across different Windows versions
+- No Python/Node.js needed on user's PC (Docker handles it)
 - Accesses at http://localhost:5000
 
 ---
 
-## Previous Issues (Now Fixed)
+## If You Have Issues Building .exe
+
+The `.exe` build can be tricky due to:
+- Different Windows versions
+- Different npm/Python versions
+- Antivirus interfering
+- System PATH issues
+
+**Best workaround:**
+1. **For your own use:** Use `python setup-local.py` (faster, more reliable)
+2. **For distribution:** Distribute `setup-local.py` with instructions instead
+3. **For teams:** Use Docker (most reliable, works on any OS)
+
+---
+
+## Previous Issues (All Fixed)
 
 **Problem:** .exe showed "Not Found" error  
 **Solution:** Backend now detects PyInstaller bundled files (sys._MEIPASS)  
@@ -85,6 +135,10 @@ docker-compose up
 **Problem:** API calls failed with "Analyze failed: Failed to fetch"  
 **Solution:** Frontend now uses relative API paths  
 **Status:** ✅ Fixed in commit 72cf497
+
+**Problem:** Build script failed silently  
+**Solution:** Added detailed error logging and pauses  
+**Status:** ✅ Fixed in commit 6b49987
    cd ..
    pyinstaller slideinjectr.spec -y
    ```
