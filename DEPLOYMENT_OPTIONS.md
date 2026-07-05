@@ -28,8 +28,9 @@ Three ways to run standalone:
 #### A. Pre-built Executable (Easiest)
 - **File:** `slideinjectr.exe` (built with PyInstaller)
 - **How:** Double-click to run
-- **Opens:** `http://localhost:5000` automatically
+- **Opens:** Auto-detected port (usually `http://localhost:5000`, or next available)
 - **Target:** Non-technical users
+- **Port detection:** Automatically finds available port, shows in console
 
 **Prerequisites:** Only LibreOffice Impress
 
@@ -38,14 +39,22 @@ Three ways to run standalone:
 - **How:** Double-click `.bat` file or run Python script
 - **What it does:** Builds frontend, installs dependencies, starts server
 - **Target:** Users with Python installed
+- **Port detection:** Intelligent selection (prefers 8000, finds next if busy)
 
 **Prerequisites:** Python 3.10+, Node.js (for npm)
+
+**Custom port:**
+```powershell
+$env:SLIDEINJECTR_PORT=5555
+python setup-local.py
+```
 
 #### C. Build Your Own Executable
 - **Script:** `build-standalone.ps1`
 - **Command:** `.\build-standalone.ps1`
 - **Creates:** `dist/slideinjectr/slideinjectr.exe`
 - **Target:** Developers, custom builds
+- **Port detection:** Same as A (auto-detected on launch)
 
 **Prerequisites:** Python 3.10+, Node.js, PyInstaller
 

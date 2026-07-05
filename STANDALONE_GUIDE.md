@@ -83,8 +83,23 @@ cd .. && python backend/app/__main__.py
 ## Troubleshooting
 
 ### "Port 5000 is already in use"
-- Another app is using port 5000
-- The app will automatically find an alternate port and show you which one
+
+**Solution:** App auto-detects next available port and shows it
+
+```
+✓ Auto-detected port: 5001
+  Access at: http://localhost:5001
+```
+
+No action needed! The app handles it automatically.
+
+**Or force specific port:**
+
+```powershell
+$env:SLIDEINJECTR_PORT=5555
+python setup-local.py
+# Uses 5555 if available, otherwise auto-detects next
+```
 
 ### "LibreOffice not found"
 - Ensure LibreOffice Impress is installed

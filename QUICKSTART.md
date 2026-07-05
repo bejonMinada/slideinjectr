@@ -7,7 +7,9 @@
 1. Download: slideinjectr.exe
 2. Install: LibreOffice Impress (one-time: https://libreoffice.org)
 3. Run: Double-click slideinjectr.exe
-4. Browser opens automatically at http://localhost:5000 ✨
+4. Browser opens automatically at auto-detected port ✨
+   - Usually: http://localhost:5000
+   - Check console if different: "✓ Auto-detected port: 5000"
 ```
 
 **No Python needed. Just works.**
@@ -19,7 +21,9 @@
 1. Install: Python 3.10+ (https://python.org)
 2. Download: slideinjectr folder
 3. Run: Double-click start-local.bat (Windows) or python setup-local.py
-4. Browser opens automatically at http://localhost:5000
+4. Browser opens automatically at auto-detected port
+   - Prefers port 8000 if available
+   - Auto-finds next available if busy
 ```
 
 **Works on any OS with Python.**
