@@ -1,5 +1,25 @@
-from pydantic import Field
+import os
+import sys
+from pathlib import Path
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def get_app_root() -> Path:
+    """Get the application root directory, accounting for different deployment modes"""
+    # PyInstaller bundled mode: sys._MEIPASS is the temp folder where files are extracted
+    if hasattr(sys, '_MEIPASS'):
+        return Path(sys._MEIPASS)
+    
+    # Development/normal mode: 3 levels up from this file
+    # backend/app/core/config.py -> root
+    return Path(__file__).parent.parent.parent.parent.resolve()
+
+
+def resolve_data_path(relative_path: str) -> Path:
+    """Convert relative path to absolute based on app root"""
+    app_root = get_app_root()
+    return (app_root / relative_path).resolve()
 
 
 class Settings(BaseSettings):
@@ -15,6 +35,12 @@ class Settings(BaseSettings):
 
     allowed_template_extensions: tuple[str, ...] = (".pptx",)
     allowed_data_extensions: tuple[str, ...] = (".csv", ".xlsx", ".xls")
+    
+    @field_validator("temp_dir", "output_dir", mode="after")
+    @classmethod
+    def resolve_paths(cls, v: str) -> str:
+        """Resolve relative paths to absolute paths"""
+        return str(resolve_data_path(v))
 
 
 settings = Settings()

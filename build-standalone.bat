@@ -76,6 +76,18 @@ if errorlevel 1 (
 echo [OK] Frontend build completed
 echo.
 
+REM Verify frontend dist was created
+if not exist "!SCRIPT_DIR!frontend\dist" (
+    echo.
+    echo [ERROR] Frontend dist folder was not created!
+    echo Check npm build output above for errors.
+    cd /d "!SCRIPT_DIR!"
+    pause
+    exit /b 1
+)
+echo [OK] Frontend dist folder verified at: !SCRIPT_DIR!frontend\dist
+echo.
+
 cd /d "!SCRIPT_DIR!"
 
 REM Setup Python environment
@@ -83,9 +95,24 @@ echo Setting up Python environment...
 
 if exist venv-build (
     echo Removing old virtual environment...
-    rmdir /s /q venv-build >nul 2>&1
-    echo [OK] Old venv removed
+    rmdir /s /q venv-build 2>nul
+    if exist venv-build (
+        echo [WARNING] Failed to remove old venv, but continuing...
+    ) else (
+        echo [OK] Old venv removed
+    )
 )
+
+if exist build (
+    echo Removing old build directory...
+    rmdir /s /q build 2>nul
+)
+
+if exist dist (
+    echo Removing old dist directory...
+    rmdir /s /q dist 2>nul
+)
+
 echo.
 
 echo Running: python -m venv venv-build
@@ -173,16 +200,28 @@ cd /d "!SCRIPT_DIR!"
 if errorlevel 1 (
     echo.
     echo [ERROR] PyInstaller build failed
+    echo Check the output above for details
     pause
     exit /b 1
 )
 
+REM Verify exe was created
+if not exist "!SCRIPT_DIR!dist\slideinjectr.exe" (
+    echo.
+    echo [ERROR] Executable was not created!
+    echo Expected location: !SCRIPT_DIR!dist\slideinjectr.exe
+    echo Check PyInstaller output above for errors
+    pause
+    exit /b 1
+)
 echo.
 echo ===============================================
 echo [SUCCESS] Build complete!
 echo ===============================================
 echo.
 echo Executable location: !SCRIPT_DIR!dist\slideinjectr.exe
+echo Executable size: 
+for %%A in ("!SCRIPT_DIR!dist\slideinjectr.exe") do echo   %%~zA bytes
 echo.
 echo Next steps:
 echo 1. Ensure LibreOffice Impress is installed on target systems

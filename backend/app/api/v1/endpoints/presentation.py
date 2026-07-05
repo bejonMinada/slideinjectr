@@ -26,17 +26,22 @@ router = APIRouter()
 
 def _resolve_output_dir(output_subdir: str | None) -> Path:
     base_dir = Path(settings.output_dir)
+    base_dir.mkdir(parents=True, exist_ok=True)
+    base_resolved = base_dir.resolve()
+    
     if not output_subdir:
-        base_dir.mkdir(parents=True, exist_ok=True)
-        return base_dir
+        return base_resolved
 
     cleaned = output_subdir.strip().replace("\\", "/")
     if not cleaned:
         raise HTTPException(status_code=400, detail="Output directory cannot be empty.")
 
     target = (base_dir / cleaned).resolve()
-    base_resolved = base_dir.resolve()
-    if base_resolved != target and base_resolved not in target.parents:
+    
+    # Security check: ensure target is within base_resolved
+    try:
+        target.relative_to(base_resolved)
+    except ValueError:
         raise HTTPException(status_code=400, detail="Output directory must be inside the configured output root.")
 
     target.mkdir(parents=True, exist_ok=True)
