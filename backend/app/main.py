@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,15 +29,29 @@ def create_app() -> FastAPI:
 
     app.include_router(router, prefix="/api")
     
-    # Mount static files (frontend) if they exist (for standalone mode)
-    dist_paths = [
-        Path(__file__).parent.parent.parent / "frontend" / "dist",  # ../frontend/dist (standalone)
-    ]
+    # Mount static files (frontend) - support multiple locations for different deployments
+    dist_paths = []
     
+    # PyInstaller bundled mode: sys._MEIPASS is set
+    if hasattr(sys, '_MEIPASS'):
+        dist_paths.append(Path(sys._MEIPASS) / "frontend" / "dist")
+    
+    # Development mode: frontend/dist relative to backend
+    dist_paths.append(Path(__file__).parent.parent.parent / "frontend" / "dist")
+    
+    # Docker mode: /app/frontend/dist
+    dist_paths.append(Path("/app/frontend/dist"))
+    
+    dist_found = False
     for dist_path in dist_paths:
         if dist_path.exists():
+            print(f"✓ Found frontend dist at: {dist_path}")
+            
             # Mount assets
-            app.mount("/assets", StaticFiles(directory=dist_path / "assets", check_dir=False), name="assets")
+            try:
+                app.mount("/assets", StaticFiles(directory=dist_path / "assets", check_dir=False), name="assets")
+            except Exception as e:
+                print(f"Warning: Could not mount assets: {e}")
             
             # Serve SPA - catch-all route that returns index.html for any non-existent routes
             @app.get("/{full_path:path}")
@@ -52,7 +67,14 @@ def create_app() -> FastAPI:
             async def serve_index():
                 return FileResponse(dist_path / "index.html")
             
+            dist_found = True
             break
+    
+    if not dist_found:
+        print("⚠️  WARNING: Frontend dist folder not found. UI will not be available.")
+        print(f"Checked paths:")
+        for p in dist_paths:
+            print(f"  - {p}")
     
     return app
 

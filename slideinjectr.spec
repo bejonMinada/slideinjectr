@@ -5,22 +5,35 @@ Bundles FastAPI backend + React frontend into single .exe
 """
 
 import os
+import sys
 from pathlib import Path
 
 block_cipher = None
 
 # Get absolute paths
-base_dir = Path('.').resolve()
+base_dir = Path(sys.argv[0]).parent.resolve()
 backend_dir = base_dir / 'backend'
 frontend_dist = base_dir / 'frontend' / 'dist'
 
-# Data files to include (frontend static files, backend app files)
+# Data files to include
 datas = []
-if frontend_dist.exists():
-    datas.append((str(frontend_dist), 'frontend/dist'))
 
-# Include entire app directory
-datas.append((str(backend_dir / 'app'), 'app'))
+# Include frontend static files
+if frontend_dist.exists():
+    print(f"Including frontend dist from: {frontend_dist}")
+    datas.append((str(frontend_dist), 'frontend/dist'))
+else:
+    print(f"WARNING: Frontend dist not found at {frontend_dist}")
+
+# Include entire app directory with all Python files
+app_dir = backend_dir / 'app'
+if app_dir.exists():
+    print(f"Including backend app from: {app_dir}")
+    datas.append((str(app_dir), 'app'))
+
+print(f"Total datas to include: {len(datas)}")
+for src, dst in datas:
+    print(f"  {src} -> {dst}")
 
 a = Analysis(
     [str(backend_dir / 'app' / '__main__.py')],
