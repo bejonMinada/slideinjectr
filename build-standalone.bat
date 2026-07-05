@@ -111,10 +111,20 @@ if errorlevel 1 (
 echo [OK] Virtual environment activated
 echo.
 
-REM Install dependencies
+REM Use explicit venv pip path to ensure we're in the virtual environment
+set "VENV_PIP=!SCRIPT_DIR!venv-build\Scripts\pip.exe"
+if not exist "!VENV_PIP!" (
+    echo [ERROR] Virtual environment pip not found at: !VENV_PIP!
+    pause
+    exit /b 1
+)
+echo [DEBUG] Using venv pip: !VENV_PIP!
+echo.
+
+REM Install dependencies using explicit venv pip
 echo Installing Python packages...
-echo Running: pip install --upgrade pip setuptools wheel
-pip install --upgrade pip setuptools wheel >nul 2>&1
+echo Running: !VENV_PIP! install --upgrade pip setuptools wheel
+"!VENV_PIP!" install --upgrade pip setuptools wheel
 if errorlevel 1 (
     echo [ERROR] Failed to upgrade pip
     pause
@@ -123,8 +133,8 @@ if errorlevel 1 (
 echo [OK] pip upgraded
 echo.
 
-echo Running: pip install -r backend\requirements.txt
-pip install -r "!SCRIPT_DIR!backend\requirements.txt"
+echo Running: !VENV_PIP! install -r backend\requirements.txt
+"!VENV_PIP!" install -r "!SCRIPT_DIR!backend\requirements.txt"
 if errorlevel 1 (
     echo.
     echo [ERROR] Failed to install backend requirements
@@ -134,8 +144,8 @@ if errorlevel 1 (
 echo [OK] Backend requirements installed
 echo.
 
-echo Running: pip install pyinstaller
-pip install pyinstaller >nul 2>&1
+echo Running: !VENV_PIP! install pyinstaller
+"!VENV_PIP!" install pyinstaller
 if errorlevel 1 (
     echo.
     echo [ERROR] Failed to install PyInstaller
@@ -145,11 +155,20 @@ if errorlevel 1 (
 echo [OK] PyInstaller installed
 echo.
 
-REM Build executable
+REM Build executable using explicit venv pyinstaller
+set "VENV_PYINSTALLER=!SCRIPT_DIR!venv-build\Scripts\pyinstaller.exe"
+if not exist "!VENV_PYINSTALLER!" (
+    echo [ERROR] PyInstaller executable not found at: !VENV_PYINSTALLER!
+    pause
+    exit /b 1
+)
+echo [DEBUG] Using venv pyinstaller: !VENV_PYINSTALLER!
+echo.
+
 echo Building executable with PyInstaller...
-echo Running: pyinstaller slideinjectr.spec
+echo Running: !VENV_PYINSTALLER! !SCRIPT_DIR!slideinjectr.spec
 cd /d "!SCRIPT_DIR!"
-pyinstaller "!SCRIPT_DIR!slideinjectr.spec"
+"!VENV_PYINSTALLER!" "!SCRIPT_DIR!slideinjectr.spec"
 
 if errorlevel 1 (
     echo.
