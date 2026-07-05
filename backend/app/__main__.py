@@ -12,6 +12,14 @@ from pathlib import Path
 from threading import Thread
 import uvicorn
 
+# Ensure backend directory is in Python path
+backend_dir = Path(__file__).parent.parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+
+# Change to backend directory
+os.chdir(backend_dir)
+
 
 def is_port_open(port):
     """Check if a port is available"""

@@ -119,6 +119,11 @@ def start_server():
     print(f"\n✓ Server starting on http://localhost:{port}")
     print("  Press Ctrl+C to stop\n")
     
+    # Change to backend directory so app module can be found
+    backend_dir = Path(__file__).parent / "backend"
+    os.chdir(backend_dir)
+    sys.path.insert(0, str(backend_dir))
+    
     # Wait a moment then open browser
     def open_browser():
         time.sleep(2)
@@ -188,7 +193,6 @@ def main():
     
     # Start server
     try:
-        os.chdir(Path(__file__).parent / "backend")
         start_server()
     except Exception as e:
         print(f"❌ Error: {e}")
