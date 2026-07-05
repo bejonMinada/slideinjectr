@@ -14,9 +14,22 @@ if (-not $pythonCmd) {
 
 Write-Host "✓ Python found: $(python --version)" -ForegroundColor Green
 
+# Check Node.js
+$nodeCmd = Get-Command npm -ErrorAction SilentlyContinue
+if (-not $nodeCmd) {
+    Write-Host "Error: npm is not installed or not in PATH" -ForegroundColor Red
+    Write-Host "Please install Node.js from https://nodejs.org/" -ForegroundColor Yellow
+    exit 1
+}
+
+Write-Host "✓ npm found: $(npm --version)" -ForegroundColor Green
+
+# Get absolute path
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
 # Build frontend
 Write-Host "`nBuilding frontend..." -ForegroundColor Cyan
-Push-Location frontend
+Push-Location "$scriptDir\frontend"
 npm install
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error: Failed to install frontend dependencies" -ForegroundColor Red
@@ -35,23 +48,45 @@ Pop-Location
 
 # Setup Python environment
 Write-Host "`nSetting up Python environment..." -ForegroundColor Cyan
+if (Test-Path "venv-build") {
+    Write-Host "Removing old virtual environment..."
+    Remove-Item -Recurse -Force "venv-build"
+}
+
 python -m venv venv-build
-.\venv-build\Scripts\Activate.ps1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Error: Failed to create virtual environment" -ForegroundColor Red
+    exit 1
+}
+
+# Activate virtual environment
+& ".\venv-build\Scripts\Activate.ps1"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Error: Failed to activate virtual environment" -ForegroundColor Red
+    exit 1
+}
 
 # Install dependencies
+Write-Host "Installing Python packages..." -ForegroundColor Cyan
 pip install --upgrade pip setuptools wheel
-pip install -r backend/requirements.txt
-pip install pyinstaller
-
+$reqsFile = Join-Path $scriptDir "backend" "requirements.txt"
+pip install -r "$reqsFile"
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Error: Failed to install Python dependencies" -ForegroundColor Red
+    Write-Host "Error: Failed to install backend requirements" -ForegroundColor Red
+    exit 1
+}
+
+pip install pyinstaller
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Error: Failed to install PyInstaller" -ForegroundColor Red
     exit 1
 }
 Write-Host "✓ Python environment ready" -ForegroundColor Green
 
 # Build executable
 Write-Host "`nBuilding executable with PyInstaller..." -ForegroundColor Cyan
-pyinstaller slideinjectr.spec
+$specFile = Join-Path $scriptDir "slideinjectr.spec"
+pyinstaller "$specFile"
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error: PyInstaller build failed" -ForegroundColor Red
@@ -59,7 +94,9 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "`n✓ Build complete!" -ForegroundColor Green
-Write-Host "`nExecutable location: ./dist/slideinjectr/slideinjectr.exe" -ForegroundColor Cyan
+Write-Host "`nExecutable location: $scriptDir\dist\slideinjectr\slideinjectr.exe" -ForegroundColor Cyan
 Write-Host "`nNext steps:" -ForegroundColor Yellow
 Write-Host "1. Ensure LibreOffice Impress is installed on target systems"
 Write-Host "2. Run slideinjectr.exe from the dist folder" -ForegroundColor Cyan
+Write-Host "`nDeactivating virtual environment..." -ForegroundColor Cyan
+deactivate
